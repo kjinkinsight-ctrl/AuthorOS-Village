@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat Room · AuthorOS Village</title>
+  <meta name="description" content="The AuthorOS Village chat room, where writers talk shop.">
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --text: #2b2a28;
+      --muted: #6b665e;
+      --accent: #7a4fd1;
+      --accent-text: #ffffff;
+      --card: #ffffff;
+      --border: #e7e2da;
+      --bubble: #f1ede7;
+      --danger: #b3261e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1b1a19;
+        --text: #f1ede7;
+        --muted: #a39d94;
+        --accent: #b393f0;
+        --accent-text: #1b1a19;
+        --card: #242322;
+        --border: #3a3836;
+        --bubble: #2e2d2b;
+        --danger: #f2b8b5;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #1b1a19;
+      --text: #f1ede7;
+      --muted: #a39d94;
+      --accent: #b393f0;
+      --accent-text: #1b1a19;
+      --card: #242322;
+      --border: #3a3836;
+      --bubble: #2e2d2b;
+      --danger: #f2b8b5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    header {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    header a.back {
+      color: var(--muted);
+      font-weight: normal;
+    }
+
+    header a:hover { text-decoration: underline; }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 24px 0 4px;
+    }
+
+    .intro {
+      color: var(--muted);
+      margin: 0 0 20px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      min-height: 1.2em;
+      margin: 0 0 8px;
+    }
+
+    .status.error { color: var(--danger); }
+
+    /* Account panel */
+    .account {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 0.95rem;
+    }
+
+    .account[hidden], #auth-form[hidden], #signed-in[hidden] { display: none; }
+
+    #auth-form {
+      display: grid;
+      gap: 8px;
+    }
+
+    #auth-form .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #auth-form .row button { flex: 1; min-width: 120px; }
+
+    .secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    #signed-in {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #signed-in span { color: var(--muted); }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 320px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .empty {
+      margin: auto;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .msg {
+      background: var(--bubble);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .msg .meta {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .msg .name {
+      font-weight: bold;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .msg .text {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    form#composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    input {
+      font: inherit;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--text);
+      min-width: 0;
+      width: 100%;
+    }
+
+    button {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-weight: bold;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    .hint {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: -32px 0 40px;
+    }
+
+    @media (max-width: 560px) {
+      form#composer { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a href="index.html">AuthorOS Village</a>
+      <a class="back" href="index.html">&larr; Back to home</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Chat Room</h1>
+    <p class="intro">Say hello, share a line you're proud of, or ask the group for help.</p>
+
+    <section class="account" aria-label="Account">
+      <form id="auth-form" hidden>
+        <input id="auth-name" type="text" placeholder="Display name (for sign up)" maxlength="30" autocomplete="nickname">
+        <input id="auth-email" type="email" placeholder="Email" required autocomplete="email">
+        <input id="auth-password" type="password" placeholder="Password (at least 6 characters)" minlength="6" required autocomplete="current-password">
+        <div class="row">
+          <button type="submit" id="sign-in-btn">Sign in</button>
+          <button type="button" id="sign-up-btn" class="secondary">Create account</button>
+        </div>
+      </form>
+      <div id="signed-in" hidden>
+        <span id="who"></span>
+        <button type="button" id="sign-out-btn" class="secondary">Sign out</button>
+      </div>
+    </section>
+
+    <p class="status" id="status" role="status"></p>
+    <p class="status error" id="conn" role="alert"></p>
+
+    <div id="messages" aria-live="polite">
+      <p class="empty" id="empty">No messages yet. Be the first to say hi.</p>
+    </div>
+
+    <form id="composer" autocomplete="off">
+      <input id="body" type="text" placeholder="Write a message..." maxlength="500" required>
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+    <p class="hint" id="composer-hint">Sign in to join the conversation. Anyone can read the room.</p>
+  </main>
+
+  <footer>
+    &copy; 2026 AuthorOS Village. All rights reserved.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script>
+    (function () {
+      // AuthorOS Write project. The publishable key is safe to ship in the browser;
+      // row-level security decides what each visitor can read and write.
+      var SUPABASE_URL = "https://dzhfhypgkukvfliubykv.supabase.co";
+      var SUPABASE_KEY = "sb_publishable_-gYq0Uwtme6kexFgp4sG9g_DDtF7eBc";
+      var MAX_MESSAGES = 200;
+      var POLL_MS = 4000;
+
+      var statusEl = document.getElementById("status");
+      var connEl = document.getElementById("conn");
+      var list = document.getElementById("messages");
+      var empty = document.getElementById("empty");
+      var form = document.getElementById("composer");
+      var bodyInput = document.getElementById("body");
+      var sendBtn = document.getElementById("send-btn");
+      var hint = document.getElementById("composer-hint");
+
+      var authForm = document.getElementById("auth-form");
+      var authName = document.getElementById("auth-name");
+      var authEmail = document.getElementById("auth-email");
+      var authPassword = document.getElementById("auth-password");
+      var signInBtn = document.getElementById("sign-in-btn");
+      var signUpBtn = document.getElementById("sign-up-btn");
+      var signedIn = document.getElementById("signed-in");
+      var who = document.getElementById("who");
+      var signOutBtn = document.getElementById("sign-out-btn");
+
+      if (!window.supabase || !window.supabase.createClient) {
+        setStatus("The chat can't load right now. Please refresh the page.", true);
+        return;
+      }
+
+      var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+
+      var currentUser = null;
+
+      function setStatus(text, isError) {
+        statusEl.textContent = text || "";
+        statusEl.className = "status" + (isError ? " error" : "");
+      }
+
+      function displayNameFor(user) {
+        var meta = user.user_metadata || {};
+        if (meta.name) return String(meta.name).slice(0, 30);
+        return (user.email || "Writer").split("@")[0].slice(0, 30);
+      }
+
+      function formatTime(ts) {
+        return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function render(messages) {
+        list.innerHTML = "";
+        if (messages.length === 0) {
+          list.appendChild(empty);
+          return;
+        }
+        messages.forEach(function (m) {
+          var item = document.createElement("div");
+          item.className = "msg";
+
+          var meta = document.createElement("div");
+          meta.className = "meta";
+
+          var name = document.createElement("span");
+          name.className = "name";
+          name.textContent = m.author;
+
+          var time = document.createElement("span");
+          time.textContent = formatTime(m.time);
+
+          meta.appendChild(name);
+          meta.appendChild(time);
+
+          var text = document.createElement("div");
+          text.className = "text";
+          text.textContent = m.body;
+
+          item.appendChild(meta);
+          item.appendChild(text);
+          list.appendChild(item);
+        });
+        list.scrollTop = list.scrollHeight;
+      }
+
+      function refreshMessages() {
+        return client
+          .from("chat_messages")
+          .select("author, body, created_at")
+          .order("created_at", { ascending: false })
+          .limit(MAX_MESSAGES)
+          .then(function (result) {
+            if (result.error) throw result.error;
+            var rows = (result.data || []).slice().reverse();
+            render(rows.map(function (r) {
+              return { author: r.author, body: r.body, time: Date.parse(r.created_at) };
+            }));
+            connEl.textContent = "";
+          })
+          .catch(function () {
+            connEl.textContent = "Can't reach the chat right now. Retrying...";
+          });
+      }
+
+      function updateAuthUI() {
+        if (currentUser) {
+          authForm.hidden = true;
+          signedIn.hidden = false;
+          who.textContent = "Signed in as " + displayNameFor(currentUser);
+          bodyInput.disabled = false;
+          sendBtn.disabled = false;
+          hint.textContent = "";
+        } else {
+          authForm.hidden = false;
+          signedIn.hidden = true;
+          bodyInput.disabled = true;
+          sendBtn.disabled = true;
+          hint.textContent = "Sign in to join the conversation. Anyone can read the room.";
+        }
+      }
+
+      function setAuthBusy(busy) {
+        signInBtn.disabled = busy;
+        signUpBtn.disabled = busy;
+      }
+
+      function friendlyAuthError(err) {
+        var msg = (err && err.message) || "";
+        console.error("Sign-in/sign-up error:", err);
+        if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg) ||
+            (err && err.name === "AuthRetryableFetchError")) {
+          return "Couldn't reach the sign-in server from this browser. Check your internet connection, turn off any ad blocker or privacy extension for this page, and try again.";
+        }
+        if (/invalid login/i.test(msg)) return "That email and password don't match. Try again.";
+        if (/already registered|already been registered/i.test(msg)) return "That email already has an account. Try signing in.";
+        if (/email not confirmed/i.test(msg)) return "Please confirm your email first, then sign in.";
+        if (/password/i.test(msg)) return "Password needs to be at least 6 characters.";
+        return "Something went wrong. Please try again.";
+      }
+
+      signInBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (!authForm.reportValidity()) return;
+        setAuthBusy(true);
+        client.auth.signInWithPassword({
+          email: authEmail.value.trim(),
+          password: authPassword.value
+        }).then(function (result) {
+          if (result.error) throw result.error;
+          authPassword.value = "";
+          setStatus("Welcome back.");
+        }).catch(function (err) {
+          setStatus(friendlyAuthError(err), true);
+        }).then(function () {
+          setAuthBusy(false);
+        });
+      });
+
+      signUpBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (!authForm.reportValidity()) return;
+        setAuthBusy(true);
+        client.auth.signUp({
+          email: authEmail.value.trim(),
+          password: authPassword.value,
+          options: { data: { name: authName.value.trim() || undefined } }
+        }).then(function (result) {
+          if (result.error) throw result.error;
+          authPassword.value = "";
+          if (result.data && result.data.session) {
+            setStatus("Account created. Welcome to the Village!");
+          } else {
+            setStatus("Check your email to confirm your account, then sign in.");
+          }
+        }).catch(function (err) {
+          setStatus(friendlyAuthError(err), true);
+        }).then(function () {
+          setAuthBusy(false);
+        });
+      });
+
+      signOutBtn.addEventListener("click", function () {
+        client.auth.signOut().then(function () {
+          setStatus("You're signed out.");
+        });
+      });
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var body = bodyInput.value.trim();
+        if (!currentUser || !body) return;
+
+        sendBtn.disabled = true;
+        client.from("chat_messages")
+          .insert({ author: displayNameFor(currentUser), body: body })
+          .then(function (result) {
+            if (result.error) throw result.error;
+            bodyInput.value = "";
+            setStatus("");
+            return refreshMessages();
+          })
+          .catch(function () {
+            setStatus("Your message didn't send. Please try again.", true);
+          })
+          .then(function () {
+            sendBtn.disabled = !currentUser;
+            bodyInput.focus();
+          });
+      });
+
+      client.auth.onAuthStateChange(function (_event, session) {
+        currentUser = session ? session.user : null;
+        updateAuthUI();
+      });
+
+      client.auth.getSession().then(function (result) {
+        currentUser = result.data && result.data.session ? result.data.session.user : null;
+        updateAuthUI();
+      });
+
+      refreshMessages();
+      setInterval(refreshMessages, POLL_MS);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AuthorOS Village</title>
+  <meta name="description" content="AuthorOS Village is a community for writers to share work, get feedback, and grow together.">
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --text: #2b2a28;
+      --muted: #6b665e;
+      --accent: #7a4fd1;
+      --accent-text: #ffffff;
+      --card: #ffffff;
+      --border: #e7e2da;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1b1a19;
+        --text: #f1ede7;
+        --muted: #a39d94;
+        --accent: #b393f0;
+        --accent-text: #1b1a19;
+        --card: #242322;
+        --border: #3a3836;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #1b1a19;
+      --text: #f1ede7;
+      --muted: #a39d94;
+      --accent: #b393f0;
+      --accent-text: #1b1a19;
+      --card: #242322;
+      --border: #3a3836;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.6;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: 20px;
+    }
+
+    nav a:hover { color: var(--text); }
+
+    .hero {
+      padding: 80px 0 64px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      line-height: 1.15;
+      margin: 0 0 16px;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 620px;
+      margin: 0 auto 32px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    .btn:hover { opacity: 0.9; }
+
+    .hero-link {
+      margin: 16px 0 0;
+      font-size: 0.95rem;
+    }
+
+    .hero-link a {
+      color: var(--muted);
+    }
+
+    section.features {
+      padding: 32px 0 64px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      margin: 0 0 8px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="#">AuthorOS Village</a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="chat.html">Chat</a>
+        <a href="#join">Join</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <h1>Write together.<br>Grow together.</h1>
+        <p>AuthorOS Village is a home for writers to share drafts, get honest feedback, and find the people who understand the craft.</p>
+        <a class="btn" id="join" href="#">Join the Village</a>
+        <p class="hero-link"><a href="chat.html">or step into the chat room &rarr;</a></p>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="wrap">
+        <div class="grid">
+          <article class="card">
+            <h2>Share your work</h2>
+            <p>Post drafts, chapters, and short pieces to a community that reads closely and responds generously.</p>
+          </article>
+          <article class="card">
+            <h2>Get feedback</h2>
+            <p>Trade constructive critiques with writers at every stage, from first sentence to final revision.</p>
+          </article>
+          <article class="card">
+            <h2>Find your people</h2>
+            <p>Connect with writers in your genre, form, and goals, and build the accountability that keeps you writing.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      &copy; 2026 AuthorOS Village. All rights reserved.
+    </div>
+  </footer>
+</body>
+</html>
