@@ -426,6 +426,11 @@
 
       function friendlyAuthError(err) {
         var msg = (err && err.message) || "";
+        console.error("Sign-in/sign-up error:", err);
+        if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg) ||
+            (err && err.name === "AuthRetryableFetchError")) {
+          return "Couldn't reach the sign-in server from this browser. Check your internet connection, turn off any ad blocker or privacy extension for this page, and try again.";
+        }
         if (/invalid login/i.test(msg)) return "That email and password don't match. Try again.";
         if (/already registered|already been registered/i.test(msg)) return "That email already has an account. Try signing in.";
         if (/email not confirmed/i.test(msg)) return "Please confirm your email first, then sign in.";
