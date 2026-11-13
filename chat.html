@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat Room · AuthorOS Village</title>
+  <meta name="description" content="The AuthorOS Village chat room, where writers talk shop.">
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --text: #2b2a28;
+      --muted: #6b665e;
+      --accent: #7a4fd1;
+      --accent-text: #ffffff;
+      --card: #ffffff;
+      --border: #e7e2da;
+      --bubble: #f1ede7;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1b1a19;
+        --text: #f1ede7;
+        --muted: #a39d94;
+        --accent: #b393f0;
+        --accent-text: #1b1a19;
+        --card: #242322;
+        --border: #3a3836;
+        --bubble: #2e2d2b;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #1b1a19;
+      --text: #f1ede7;
+      --muted: #a39d94;
+      --accent: #b393f0;
+      --accent-text: #1b1a19;
+      --card: #242322;
+      --border: #3a3836;
+      --bubble: #2e2d2b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    header {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    header a.back {
+      color: var(--muted);
+      font-weight: normal;
+    }
+
+    header a:hover { text-decoration: underline; }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 24px 0 4px;
+    }
+
+    .intro {
+      color: var(--muted);
+      margin: 0 0 20px;
+    }
+
+    #messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 320px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .empty {
+      margin: auto;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .msg {
+      background: var(--bubble);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .msg .meta {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .msg .name {
+      font-weight: bold;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .msg .text {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 140px 1fr auto;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    input {
+      font: inherit;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--text);
+      min-width: 0;
+    }
+
+    button {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-weight: bold;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
+
+    button:hover { opacity: 0.9; }
+
+    @media (max-width: 560px) {
+      form { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a href="index.html">AuthorOS Village</a>
+      <a class="back" href="index.html">&larr; Back to home</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Chat Room</h1>
+    <p class="intro">Say hello, share a line you're proud of, or ask the group for help.</p>
+
+    <div id="messages" aria-live="polite">
+      <p class="empty" id="empty">No messages yet. Be the first to say hi.</p>
+    </div>
+
+    <form id="composer" autocomplete="off">
+      <input id="author" type="text" placeholder="Your name" maxlength="30" required>
+      <input id="body" type="text" placeholder="Write a message..." maxlength="500" required>
+      <button type="submit">Send</button>
+    </form>
+  </main>
+
+  <footer>
+    &copy; 2026 AuthorOS Village. All rights reserved.
+  </footer>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = "authoros-chat-messages";
+      var MAX_MESSAGES = 200;
+
+      var list = document.getElementById("messages");
+      var empty = document.getElementById("empty");
+      var form = document.getElementById("composer");
+      var authorInput = document.getElementById("author");
+      var bodyInput = document.getElementById("body");
+
+      // Remember the visitor's name for next time (per-browser convenience only).
+      try {
+        var savedName = localStorage.getItem("authoros-chat-name");
+        if (savedName) authorInput.value = savedName;
+      } catch (e) { /* storage unavailable: ignore */ }
+
+      function loadMessages() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          var parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveMessages(messages) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_MESSAGES)));
+        } catch (e) { /* storage unavailable or full: ignore */ }
+      }
+
+      function formatTime(ts) {
+        var d = new Date(ts);
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function render(messages) {
+        list.innerHTML = "";
+        if (messages.length === 0) {
+          list.appendChild(empty);
+          return;
+        }
+        messages.forEach(function (m) {
+          var item = document.createElement("div");
+          item.className = "msg";
+
+          var meta = document.createElement("div");
+          meta.className = "meta";
+
+          var name = document.createElement("span");
+          name.className = "name";
+          name.textContent = m.author;
+
+          var time = document.createElement("span");
+          time.textContent = formatTime(m.time);
+
+          meta.appendChild(name);
+          meta.appendChild(time);
+
+          var text = document.createElement("div");
+          text.className = "text";
+          text.textContent = m.body;
+
+          item.appendChild(meta);
+          item.appendChild(text);
+          list.appendChild(item);
+        });
+        list.scrollTop = list.scrollHeight;
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var author = authorInput.value.trim();
+        var body = bodyInput.value.trim();
+        if (!author || !body) return;
+
+        var messages = loadMessages();
+        messages.push({ author: author, body: body, time: Date.now() });
+        saveMessages(messages);
+        render(messages.slice(-MAX_MESSAGES));
+
+        try { localStorage.setItem("authoros-chat-name", author); } catch (e) { /* ignore */ }
+        bodyInput.value = "";
+        bodyInput.focus();
+      });
+
+      render(loadMessages());
+    })();
+  </script>
+</body>
+</html>
