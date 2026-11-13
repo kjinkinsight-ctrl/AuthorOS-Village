@@ -97,6 +97,15 @@
       margin: 0 0 20px;
     }
 
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      min-height: 1.2em;
+      margin: 0 0 8px;
+    }
+
+    button:disabled { opacity: 0.6; cursor: default; }
+
     #messages {
       flex: 1;
       display: flex;
@@ -198,6 +207,8 @@
     <h1>Chat Room</h1>
     <p class="intro">Say hello, share a line you're proud of, or ask the group for help.</p>
 
+    <p class="status" id="status" role="status"></p>
+
     <div id="messages" aria-live="polite">
       <p class="empty" id="empty">No messages yet. Be the first to say hi.</p>
     </div>
@@ -215,8 +226,14 @@
 
   <script>
     (function () {
-      var STORAGE_KEY = "authoros-chat-messages";
+      // Public project URL and publishable key. Safe to ship in the browser;
+      // row-level security limits what anonymous visitors can do.
+      var SUPABASE_URL = "https://dqpnilxnfxchdyahvqey.supabase.co";
+      var SUPABASE_KEY = "sb_publishable_n4hZlj8IFKOJj4ZNkfRfrA_BnMAO8yy";
       var MAX_MESSAGES = 200;
+      var POLL_MS = 4000;
+
+      var status = document.getElementById("status");
 
       var list = document.getElementById("messages");
       var empty = document.getElementById("empty");
@@ -230,20 +247,55 @@
         if (savedName) authorInput.value = savedName;
       } catch (e) { /* storage unavailable: ignore */ }
 
-      function loadMessages() {
-        try {
-          var raw = localStorage.getItem(STORAGE_KEY);
-          var parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          return [];
-        }
+      function headers(extra) {
+        var h = {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json"
+        };
+        for (var k in extra) h[k] = extra[k];
+        return h;
       }
 
-      function saveMessages(messages) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_MESSAGES)));
-        } catch (e) { /* storage unavailable or full: ignore */ }
+      function setStatus(text) {
+        if (status) status.textContent = text || "";
+      }
+
+      function fetchMessages() {
+        var url = SUPABASE_URL + "/rest/v1/chat_messages" +
+          "?select=author,body,created_at&order=created_at.desc&limit=" + MAX_MESSAGES;
+        return fetch(url, { headers: headers({}) })
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          })
+          .then(function (rows) {
+            // Convert to oldest-first and to the shape render() expects.
+            return rows.reverse().map(function (r) {
+              return { author: r.author, body: r.body, time: Date.parse(r.created_at) };
+            });
+          });
+      }
+
+      function postMessage(author, body) {
+        return fetch(SUPABASE_URL + "/rest/v1/chat_messages", {
+          method: "POST",
+          headers: headers({ "Prefer": "return=minimal" }),
+          body: JSON.stringify({ author: author, body: body })
+        }).then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+        });
+      }
+
+      function refresh() {
+        return fetchMessages()
+          .then(function (messages) {
+            setStatus("");
+            render(messages);
+          })
+          .catch(function () {
+            setStatus("Can't reach the chat right now. Retrying...");
+          });
       }
 
       function formatTime(ts) {
@@ -291,17 +343,26 @@
         var body = bodyInput.value.trim();
         if (!author || !body) return;
 
-        var messages = loadMessages();
-        messages.push({ author: author, body: body, time: Date.now() });
-        saveMessages(messages);
-        render(messages.slice(-MAX_MESSAGES));
+        var sendButton = form.querySelector("button");
+        sendButton.disabled = true;
 
-        try { localStorage.setItem("authoros-chat-name", author); } catch (e) { /* ignore */ }
-        bodyInput.value = "";
-        bodyInput.focus();
+        postMessage(author, body)
+          .then(function () {
+            try { localStorage.setItem("authoros-chat-name", author); } catch (e) { /* ignore */ }
+            bodyInput.value = "";
+            bodyInput.focus();
+            return refresh();
+          })
+          .catch(function () {
+            setStatus("Your message didn't send. Please try again.");
+          })
+          .then(function () {
+            sendButton.disabled = false;
+          });
       });
 
-      render(loadMessages());
+      refresh();
+      setInterval(refresh, POLL_MS);
     })();
   </script>
 </body>
